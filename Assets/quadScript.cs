@@ -11,10 +11,12 @@ public class quadScript : MonoBehaviour
     // member variables of quadScript, accessible from any function
     static int xdim = 100;
     static int ydim = 100;
+    static int zdim = 100;
     float isolevel = 0f; // [0, 1]
     float[,] heightmap = new float[xdim, ydim]; // Twodimensional array containing pixelval for all pixels
     List<Vector3> vertices;
     List<int> indices;
+    int i;
 
 
     // Start is called once when the application is run
@@ -72,7 +74,7 @@ public class quadScript : MonoBehaviour
         print("slicePosSliderChange:" + val);
 
         // Get value relative to the number of slices
-        float depth = val * 100;
+        float depth = val * zdim;
 
         // Cast to integer in order to view specific slice
         setSlice((int)depth);
@@ -196,8 +198,9 @@ public class quadScript : MonoBehaviour
         meshScript mscript = GameObject.Find("GameObjectMesh").GetComponent<meshScript>();
         vertices = new List<Vector3>();
         indices = new List<int>();
+        i = 0;
         
-        for (int z = 0; z < 100 - 1; z++)
+        for (int z = 0; z < zdim - 1; z++)
         {
             for (int y = 0; y < ydim - 1; y++)
             {
@@ -287,13 +290,17 @@ public class quadScript : MonoBehaviour
 
     public void makeTriangle(Vector3 p1, Vector3 p2, Vector3 p3)
     {
-        // Transform value set if necessary
+        // Transform values if necessary
+        p1 = transformValues(p1);
+        p2 = transformValues(p2);
+        p3 = transformValues(p3);
+
         vertices.Add(p1);
         vertices.Add(p2);
         vertices.Add(p3);
-        indices.Add(1);
-        indices.Add(2);
-        indices.Add(3);
+        indices.Add(i++);
+        indices.Add(i++);
+        indices.Add(i++);
     }
 
     public void makeQuadrilateral(Vector3 p1, Vector3 p2, Vector3 p3, Vector3 p4)
@@ -305,6 +312,15 @@ public class quadScript : MonoBehaviour
     public bool isAbove(Vector3 p, float isolevel)
     {
         return pixelval(p) >= isolevel;
+    }
+
+    public Vector3 transformValues(Vector3 p1)
+    {
+        Vector3 p2 = new Vector3();
+        p2.x = (p1.x - 50) / 100;
+        p2.y = (p1.y - 50) / 100;
+        p2.z = (p1.z - 50) / 100;
+        return p2;
     }
 
 }
