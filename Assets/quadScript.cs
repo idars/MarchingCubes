@@ -62,11 +62,25 @@ public class quadScript : MonoBehaviour
 
     float pixelval(Vector3 p)
     {
+        /* For a sphere
         // Returns a value between 0 and 1 based on the distance from the vector to the center of the sphere.
         double x = p.x - 50;
         double y = p.y - 50;
         double z = p.z - 50;
         return (float)Math.Sqrt(x * x + y * y + z * z) / 50;
+        */
+        if (p.x > 25 && p.x < 75)
+        {
+            if (p.y > 25 && p.y < 75)
+            {
+                if (p.z > 25 && p.z < 75)
+                {
+                    return 0;
+                }
+            }
+        }
+        return 1;
+
     }
 
     public void slicePosSliderChange(float val)
@@ -78,8 +92,6 @@ public class quadScript : MonoBehaviour
 
         // Cast to integer in order to view specific slice
         setSlice((int)depth);
-
-        drawContour();
     }
 
     public void sliceIsoSliderChange(float val)
@@ -87,21 +99,20 @@ public class quadScript : MonoBehaviour
         print("sliceIsoSliderChange:" + val);
 
         isolevel = val;
-
-        drawContour();
     }
 
     public void button1Pushed()
     {
         print("button1Pushed");
+
+        MakeContour();
     }
 
     public void button2Pushed()
     {
         print("button2Pushed");
     }
-
-    /**
+    
     public void drawIsoline()
     {
         meshScript mscript = GameObject.Find("GameObjectMesh").GetComponent<meshScript>();
@@ -191,9 +202,7 @@ public class quadScript : MonoBehaviour
         }
     }
 
-    */
-
-    public void drawContour()
+    public void MakeContour()
     {
         meshScript mscript = GameObject.Find("GameObjectMesh").GetComponent<meshScript>();
         vertices = new List<Vector3>();
@@ -212,7 +221,8 @@ public class quadScript : MonoBehaviour
             }
         }
 
-        mscript.createMeshGeometry(vertices, indices);
+        // mscript.createMeshGeometry(vertices, indices);
+        MeshToFile("mesh.obj", vertices, indices);
     }
 
     public void doCube(Vector3 p)
@@ -242,18 +252,88 @@ public class quadScript : MonoBehaviour
 
     public void doTetrahedron(Vector3 p1, Vector3 p2, Vector3 p3, Vector3 p4)
     {
-        Vector3 p12 = p1 + p2 / 2;
-        Vector3 p13 = p1 + p3 / 2;
-        Vector3 p14 = p1 + p4 / 2;
-        Vector3 p23 = p2 + p3 / 2;
-        Vector3 p24 = p2 + p4 / 2;
-        Vector3 p34 = p3 + p4 / 2;
+        // Vector3 p12 = new Vector3((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, (p1.z + p2.z) / 2);
+        // Vector3 p13 = new Vector3((p1.x + p3.x) / 2, (p1.y + p3.y) / 2, (p1.z + p3.z) / 2);
+        // Vector3 p14 = new Vector3((p1.x + p4.x) / 2, (p1.y + p4.y) / 2, (p1.z + p4.z) / 2);
+        // Vector3 p23 = new Vector3((p2.x + p3.x) / 2, (p2.y + p3.y) / 2, (p2.z + p3.z) / 2);
+        // Vector3 p24 = new Vector3((p2.x + p4.x) / 2, (p2.y + p4.y) / 2, (p2.z + p4.z) / 2);
+        // Vector3 p34 = new Vector3((p3.x + p4.x) / 2, (p3.y + p4.y) / 2, (p3.z + p4.z) / 2);
+        Vector3 p12 = (p1 + p2) / 2;
+        Vector3 p13 = (p1 + p3) / 2;
+        Vector3 p14 = (p1 + p4) / 2;
+        Vector3 p23 = (p2 + p3) / 2;
+        Vector3 p24 = (p2 + p4) / 2;
+        Vector3 p34 = (p3 + p4) / 2;
 
         bool b1 = isAbove(p1, isolevel);
         bool b2 = isAbove(p2, isolevel);
         bool b3 = isAbove(p3, isolevel);
         bool b4 = isAbove(p4, isolevel);
 
+        if ((b1 && b2 && b3 && b4) || (!b1 && !b2 && !b3 && !b4))
+        {
+            // Nothing
+        }
+        // In the following cases, the vertices are numbered counter-clockwise
+        else if (!b1 && !b2 && !b3 && b4)
+        {
+            makeTriangle(p34, p24, p14);
+        }
+        else if (!b1 && !b2 && b3 && !b4)
+        {
+            makeTriangle(p23, p34, p13);
+        }
+        else if (!b1 && !b2 && b3 && b4)
+        {
+            makeQuadrilateral(p23, p24, p14, p13);
+        }
+        else if (!b1 && b2 && !b3 && !b4)
+        {
+            makeTriangle(p24, p23, p12);
+        }
+        else if (!b1 && b2 && !b3 && b4)
+        {
+            makeQuadrilateral(p14, p34, p23, p12);
+        }
+        else if (!b1 && b2 && b3 && !b4)
+        {
+            makeQuadrilateral(p24, p34, p13, p12);
+        }
+        else if (!b1 && b2 && b3 && b4)
+        {
+            makeTriangle(p14, p13, p12);
+        }
+        // Under here, the vertices are defined clockwise again
+        else if (b1 && !b2 && !b3 && !b4)
+        {
+            makeTriangle(p12, p13, p14);
+        }
+        else if (b1 && !b2 && !b3 && b4)
+        {
+            makeQuadrilateral(p12, p13, p34, p24);
+        }
+        else if (b1 && !b2 && b3 && !b4)
+        {
+            makeQuadrilateral(p12, p23, p34, p14);
+        }
+        else if (b1 && !b2 && b3 && b4)
+        {
+            makeTriangle(p12, p23, p24);
+        }
+        else if (b1 && b2 && !b3 && !b4)
+        {
+            makeQuadrilateral(p13, p14, p24, p23);
+        }
+        else if (b1 && b2 && !b3 && b4)
+        {
+            makeTriangle(p13, p34, p23);
+        }
+        else if (b1 && b2 && b3 && !b4)
+        {
+            makeTriangle(p14, p24, p34);
+        }
+
+        /*
         if ((b1 && b2 && b3 && b4) || (!b1 && !b2 && !b3 && !b4))
         {
             // Nothing
@@ -286,14 +366,15 @@ public class quadScript : MonoBehaviour
         {
             makeTriangle(p12, p13, p14);
         }
+         */
     }
 
     public void makeTriangle(Vector3 p1, Vector3 p2, Vector3 p3)
     {
         // Transform values if necessary
-        p1 = transformValues(p1);
-        p2 = transformValues(p2);
-        p3 = transformValues(p3);
+        // p1 = transformValues(p1);
+        // p2 = transformValues(p2);
+        // p3 = transformValues(p3);
 
         vertices.Add(p1);
         vertices.Add(p2);
@@ -321,6 +402,23 @@ public class quadScript : MonoBehaviour
         p2.y = (p1.y - 50) / 100;
         p2.z = (p1.z - 50) / 100;
         return p2;
+    }
+
+    // Save a generated mesh to an obj file containing a list of vertices and indices
+    public void MeshToFile(string filename, List<Vector3> vertices, List<int> indices)
+    {
+        StreamWriter stream = new StreamWriter(filename);
+        stream.WriteLine("g " + "Mesh");
+
+        foreach (Vector3 v in vertices)
+            stream.WriteLine(string.Format("v {0} {1} {2}", v.x, v.y, v.z));
+
+        stream.WriteLine();
+        for (int i = 0; i < indices.Count; i += 3)
+            stream.WriteLine(string.Format("f {0}/{0}/{0} {1}/{1}/{1} {2}/{2}/{2}", indices[i] + 1, indices[i + 1] + 1, indices[i + 2] + 1));
+
+        stream.Close();
+        print("Mesh saved to file: " + filename);
     }
 
 }

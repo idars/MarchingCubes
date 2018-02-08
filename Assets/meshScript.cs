@@ -22,6 +22,7 @@ public class meshScript : MonoBehaviour
         // Mesh mesh = GetComponent<MeshFilter>().mesh;
         Mesh mesh = new Mesh();
         GetComponent<MeshFilter>().mesh = mesh;
+        // mesh.Clear();
         mesh.SetVertices(vertices);
      
         // https://docs.unity3d.com/ScriptReference/MeshTopology.html
