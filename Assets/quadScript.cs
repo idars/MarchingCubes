@@ -6,8 +6,6 @@ using System.IO;
 
 public class quadScript : MonoBehaviour
 {
-
-
     // member variables of quadScript, accessible from any function
     static int xdim = 100;
     static int ydim = 100;
@@ -17,7 +15,6 @@ public class quadScript : MonoBehaviour
     List<Vector3> vertices;
     List<int> indices;
     int i;
-
 
     // Start is called once when the application is run
     void Start()
@@ -62,13 +59,13 @@ public class quadScript : MonoBehaviour
 
     float pixelval(Vector3 p)
     {
-        /* For a sphere
         // Returns a value between 0 and 1 based on the distance from the vector to the center of the sphere.
         double x = p.x - 50;
         double y = p.y - 50;
         double z = p.z - 50;
         return (float)Math.Sqrt(x * x + y * y + z * z) / 50;
-        */
+
+        /* Test cube
         if (p.x > 25 && p.x < 75)
         {
             if (p.y > 25 && p.y < 75)
@@ -80,7 +77,7 @@ public class quadScript : MonoBehaviour
             }
         }
         return 1;
-
+        */
     }
 
     public void slicePosSliderChange(float val)
@@ -252,18 +249,21 @@ public class quadScript : MonoBehaviour
 
     public void doTetrahedron(Vector3 p1, Vector3 p2, Vector3 p3, Vector3 p4)
     {
-        // Vector3 p12 = new Vector3((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, (p1.z + p2.z) / 2);
-        // Vector3 p13 = new Vector3((p1.x + p3.x) / 2, (p1.y + p3.y) / 2, (p1.z + p3.z) / 2);
-        // Vector3 p14 = new Vector3((p1.x + p4.x) / 2, (p1.y + p4.y) / 2, (p1.z + p4.z) / 2);
-        // Vector3 p23 = new Vector3((p2.x + p3.x) / 2, (p2.y + p3.y) / 2, (p2.z + p3.z) / 2);
-        // Vector3 p24 = new Vector3((p2.x + p4.x) / 2, (p2.y + p4.y) / 2, (p2.z + p4.z) / 2);
-        // Vector3 p34 = new Vector3((p3.x + p4.x) / 2, (p3.y + p4.y) / 2, (p3.z + p4.z) / 2);
-        Vector3 p12 = (p1 + p2) / 2;
-        Vector3 p13 = (p1 + p3) / 2;
-        Vector3 p14 = (p1 + p4) / 2;
-        Vector3 p23 = (p2 + p3) / 2;
-        Vector3 p24 = (p2 + p4) / 2;
-        Vector3 p34 = (p3 + p4) / 2;
+        // Midpoint vertices
+        // Vector3 p12 = (p1 + p2) / 2;
+        // Vector3 p13 = (p1 + p3) / 2;
+        // Vector3 p14 = (p1 + p4) / 2;
+        // Vector3 p23 = (p2 + p3) / 2;
+        // Vector3 p24 = (p2 + p4) / 2;
+        // Vector3 p34 = (p3 + p4) / 2;
+
+        // Interpolated vertices
+        Vector3 p12 = Vector3.Lerp(p1, p2, interpolant(p1, p2, isolevel));
+        Vector3 p13 = Vector3.Lerp(p1, p3, interpolant(p1, p3, isolevel));
+        Vector3 p14 = Vector3.Lerp(p1, p4, interpolant(p1, p4, isolevel));
+        Vector3 p23 = Vector3.Lerp(p2, p3, interpolant(p2, p3, isolevel));
+        Vector3 p24 = Vector3.Lerp(p2, p4, interpolant(p2, p4, isolevel));
+        Vector3 p34 = Vector3.Lerp(p3, p4, interpolant(p3, p4, isolevel));
 
         bool b1 = isAbove(p1, isolevel);
         bool b2 = isAbove(p2, isolevel);
@@ -332,41 +332,6 @@ public class quadScript : MonoBehaviour
         {
             makeTriangle(p14, p24, p34);
         }
-
-        /*
-        if ((b1 && b2 && b3 && b4) || (!b1 && !b2 && !b3 && !b4))
-        {
-            // Nothing
-        }
-        else if ((b1 && b2 && b3 && !b4) || (!b1 && !b2 && !b3 && b4))
-        {
-            makeTriangle(p14, p24, p34);
-        }
-        else if ((b1 && b2 && !b3 && b4) || (!b1 && !b2 && b3 && !b4))
-        {
-            makeTriangle(p13, p34, p23);
-        }
-        else if ((b1 && b2 && !b3 && !b4) || (!b1 && !b2 && b3 && b4))
-        {
-            makeQuadrilateral(p13, p14, p24, p23);
-        }
-        else if ((b1 && !b2 && b3 && b4) || (!b1 && b2 && !b3 && !b4))
-        {
-            makeTriangle(p12, p23, p24);
-        }
-        else if ((b1 && !b2 && b3 && !b4) || (!b1 && b2 && !b3 && b4))
-        {
-            makeQuadrilateral(p12, p23, p34, p14);
-        }
-        else if ((b1 && !b2 && !b3 && b4) || (!b1 && b2 && b3 && !b4))
-        {
-            makeQuadrilateral(p12, p13, p34, p24);
-        }
-        else if ((b1 && !b2 && !b3 && !b4) || (!b1 && b2 && b3 && b4))
-        {
-            makeTriangle(p12, p13, p14);
-        }
-         */
     }
 
     public void makeTriangle(Vector3 p1, Vector3 p2, Vector3 p3)
@@ -390,6 +355,7 @@ public class quadScript : MonoBehaviour
         makeTriangle(p1, p3, p4);
     }
 
+    // Returns true if p is outside the isoline
     public bool isAbove(Vector3 p, float isolevel)
     {
         return pixelval(p) >= isolevel;
@@ -402,6 +368,15 @@ public class quadScript : MonoBehaviour
         p2.y = (p1.y - 50) / 100;
         p2.z = (p1.z - 50) / 100;
         return p2;
+    }
+
+    // Return the difference between p1 and p2 relative to the isolevel
+    // I haven't checked for values outside the [p1, p2] interval
+    public float interpolant(Vector3 p1, Vector3 p2, float isolevel)
+    {
+        float v1 = pixelval(p1);
+        float v2 = pixelval(p2);
+        return (isolevel - v1) / (v2 - v1);
     }
 
     // Save a generated mesh to an obj file containing a list of vertices and indices
